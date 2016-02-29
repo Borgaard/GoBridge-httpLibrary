@@ -1,13 +1,14 @@
 package main
 
 import (
-	"encoding/json"
+	"html/template"
 	"net/http"
+	"path"
 )
 
 type book struct {
-	Title  string `json:"title"`
-	Author string `json:"author"`
+	Title  string
+	Author string
 }
 
 func main() {
@@ -18,17 +19,14 @@ func main() {
 func showBooks(w http.ResponseWriter, r *http.Request) {
 	b := book{"Building Web Apps with Go", "Jeremy Saenz"}
 
-  w.Header().Set("Content-Type", "application/json")
+	fp := path.Join("templates", "index.html")
+	tmpl, err := template.ParseFiles(fp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-  enc := json.NewEncoder(w)
-  if err := enc.Encode(b); err != nil { //combining these two lines ensures err is only within this conditional's scope. indicates intention. err not needed below.
-    fmt.println("Error encoding!", err)
-  }
-	// js, err := json.Marshal(b)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// w.Write(js)
+	if err := tmpl.Execute(w, b); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
